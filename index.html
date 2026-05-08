@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Малювання</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Малювання мишкою</h1>
+    <canvas id="drawingCanvas" width="800" height="600"></canvas>
+    <br>
+    <button id="saveBtn">Зберегти</button>
+    <button id="clearBtn">Очистити</button>
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const saveBtn = document.getElementById('saveBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Завантаження збереженого малюнка при завантаженні сторінки
+        window.addEventListener('load', () => {
+            const savedDrawing = localStorage.getItem('drawing');
+            if (savedDrawing) {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = savedDrawing;
+            }
+        });
+
+        // Початок малювання
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        });
+
+        // Малювання
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        });
+
+        // Зупинка малювання
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        canvas.addEventListener('mouseout', () => {
+            isDrawing = false;
+        });
+
+        // Збереження
+        saveBtn.addEventListener('click', () => {
+            const dataURL = canvas.toDataURL();
+            localStorage.setItem('drawing', dataURL);
+            alert('Малюнок збережено!');
+        });
+
+        // Очищення
+        clearBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            localStorage.removeItem('drawing');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+body {
+    font-family: Times New Roman, sans-serif;
+    text-align: center;
+    background-color: #f0f0f0;
+}
+
+h1 {
+    color: #333;
+}
+
+canvas {
+    border: 2px solid #333;
+    background-color: white;
+    cursor: crosshair;
+}
+
+#saveBtn {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+#saveBtn:hover {
+    background-color: #45a049;
+}
+
+#clearBtn {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #d01010;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+#clearBtn:hover {
+    background-color: #92080e;
+}
