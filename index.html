@@ -7,20 +7,45 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Малювання мишкою</h1>
-    <canvas id="drawingCanvas" width="800" height="600"></canvas>
-    <br>
-    <button id="saveBtn">Зберегти</button>
-    <button id="clearBtn">Очистити</button>
+    <div class="drawing-wrapper">
+        <div class="tool-panel">
+            <h2>Кольори</h2>
+            <button class="color-btn active" data-color="#000000" style="background: #000000;"></button>
+            <button class="color-btn" data-color="#ff0000" style="background: #ff0000;"></button>
+            <button class="color-btn" data-color="#0000ff" style="background: #0000ff;"></button>
+            <button class="color-btn" data-color="#ff8c00" style="background: #ff8c00;"></button>
+            <button class="color-btn" data-color="#ffff00" style="background: #ffff00;"></button>
+            <button class="color-btn" data-color="#008000" style="background: #008000;"></button>
+            <button class="color-btn" data-color="#800080" style="background: #800080;"></button>
+            <button id="paletteBtn" class="palette-btn" type="button">Палітра</button>
+            <input id="colorPicker" type="color" value="#000000" hidden>
+        </div>
+        <div class="canvas-container">
+            <canvas id="drawingCanvas" width="900" height="650"></canvas>
+            <div id="cursorCircle"></div>
+        </div>
+    </div>
+    <div class="controls-row">
+        <button id="saveBtn">Зберегти</button>
+        <button id="clearBtn">Очистити</button>
+    </div>
     <script>
         const canvas = document.getElementById('drawingCanvas');
         const ctx = canvas.getContext('2d');
         const saveBtn = document.getElementById('saveBtn');
         const clearBtn = document.getElementById('clearBtn');
+        const cursorCircle = document.getElementById('cursorCircle');
 
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
+        let drawingMode = null;
+        const eraserRadius = 15;
+
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
 
         // Завантаження збереженого малюнка при завантаженні сторінки
         window.addEventListener('load', () => {
@@ -34,29 +59,96 @@
             }
         });
 
-        // Початок малювання
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
         canvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            drawingMode = e.button === 2 ? 'erase' : 'draw';
             isDrawing = true;
             [lastX, lastY] = [e.offsetX, e.offsetY];
+            if (drawingMode === 'erase') {
+                eraseAt(e.offsetX, e.offsetY);
+            }
         });
 
-        // Малювання
         canvas.addEventListener('mousemove', (e) => {
+            updateCursor(e);
             if (!isDrawing) return;
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(e.offsetX, e.offsetY);
-            ctx.stroke();
-            [lastX, lastY] = [e.offsetX, e.offsetY];
+
+            if (drawingMode === 'draw') {
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.stroke();
+                [lastX, lastY] = [e.offsetX, e.offsetY];
+            } else if (drawingMode === 'erase') {
+                eraseAt(e.offsetX, e.offsetY);
+            }
         });
 
-        // Зупинка малювання
         canvas.addEventListener('mouseup', () => {
             isDrawing = false;
+            drawingMode = null;
         });
 
-        canvas.addEventListener('mouseout', () => {
+        canvas.addEventListener('mouseleave', () => {
             isDrawing = false;
+            drawingMode = null;
+            cursorCircle.style.display = 'none';
+        });
+
+        canvas.addEventListener('mouseenter', () => {
+            cursorCircle.style.display = 'block';
+        });
+
+        function eraseAt(x, y) {
+            ctx.clearRect(x - eraserRadius, y - eraserRadius, eraserRadius * 2, eraserRadius * 2);
+        }
+
+        function updateCursor(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            cursorCircle.style.left = `${x}px`;
+            cursorCircle.style.top = `${y}px`;
+            cursorCircle.style.width = `${eraserRadius * 2}px`;
+            cursorCircle.style.height = `${eraserRadius * 2}px`;
+            cursorCircle.textContent = drawingMode === 'erase' ? '' : '';
+        }
+
+        const colorButtons = document.querySelectorAll('.color-btn');
+        const paletteBtn = document.getElementById('paletteBtn');
+        const colorPicker = document.getElementById('colorPicker');
+        let currentColor = '#000000';
+
+        function setColor(color) {
+            currentColor = color;
+            ctx.strokeStyle = color;
+            colorPicker.value = color;
+        }
+
+        function setActiveColorButton(selectedButton) {
+            colorButtons.forEach((button) => button.classList.remove('active'));
+            selectedButton?.classList.add('active');
+        }
+
+        colorButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const color = button.dataset.color;
+                setColor(color);
+                setActiveColorButton(button);
+            });
+        });
+
+        paletteBtn.addEventListener('click', () => {
+            colorPicker.click();
+        });
+
+        colorPicker.addEventListener('input', (e) => {
+            setColor(e.target.value);
+            setActiveColorButton(null);
         });
 
         // Збереження
