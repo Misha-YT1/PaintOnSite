@@ -24,12 +24,49 @@
             <canvas id="drawingCanvas" width="900" height="650"></canvas>
             <div id="cursorCircle"></div>
         </div>
+        <div class="shapes-panel">
+            <h2>Фігури</h2>
+            <button class="shape-btn" data-shape="square" title="Квадрат">⬜</button>
+            <button class="shape-btn" data-shape="circle" title="Круг">⭕</button>
+            <button class="shape-btn" data-shape="triangle" title="Трикутник">△</button>
+            <button class="shape-btn" data-shape="diamond" title="Ромб">♦</button>
+            <button class="shape-btn" data-shape="none" title="Малювання">✏️</button>
+        </div>
     </div>
     <div class="controls-row">
         <button id="saveBtn">Зберегти</button>
         <button id="clearBtn">Очистити</button>
     </div>
-    <script>
+    
+    <!-- Модальне вікно вибору типу трикутника -->
+    <div id="triangleModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Оберіть тип трикутника</h3>
+            <div class="triangle-options">
+                <button class="triangle-option" data-triangle="right-triangle">
+                    <div class="triangle right-triangle"></div>
+                    <span>Прямокутний</span>
+                </button>
+                <button class="triangle-option" data-triangle="isosceles">
+                    <div class="triangle isosceles"></div>
+                    <span>Рівнобедрений</span>
+                </button>
+                <button class="triangle-option" data-triangle="acute">
+                    <div class="triangle acute"></div>
+                    <span>Гострокутний</span>
+                </button>
+                <button class="triangle-option" data-triangle="obtuse">
+                    <div class="triangle obtuse"></div>
+                    <span>Тупокутний</span>
+                </button>
+                <button class="triangle-option" data-triangle="equilateral">
+                    <div class="triangle equilateral"></div>
+                    <span>Рівносторонній</span>
+                </button>
+            </div>
+            <button id="closeModal" class="close-btn">Скасувати</button>
+        </div>
+    </div>    <script>
         const canvas = document.getElementById('drawingCanvas');
         const ctx = canvas.getContext('2d');
         const saveBtn = document.getElementById('saveBtn');
@@ -40,7 +77,12 @@
         let lastX = 0;
         let lastY = 0;
         let drawingMode = null;
+        let currentShape = 'none';
+        let currentTriangleType = null;
+        let shapeStartX = 0;
+        let shapeStartY = 0;
         const eraserRadius = 15;
+        let canvasBackup = null;
 
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 3;
@@ -65,11 +107,20 @@
 
         canvas.addEventListener('mousedown', (e) => {
             e.preventDefault();
-            drawingMode = e.button === 2 ? 'erase' : 'draw';
             isDrawing = true;
-            [lastX, lastY] = [e.offsetX, e.offsetY];
-            if (drawingMode === 'erase') {
+            shapeStartX = e.offsetX;
+            shapeStartY = e.offsetY;
+            lastX = e.offsetX;
+            lastY = e.offsetY;
+            
+            if (e.button === 2) {
+                drawingMode = 'erase';
                 eraseAt(e.offsetX, e.offsetY);
+            } else if (currentShape !== 'none') {
+                drawingMode = 'shape';
+                canvasBackup = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            } else {
+                drawingMode = 'draw';
             }
         });
 
@@ -85,12 +136,18 @@
                 [lastX, lastY] = [e.offsetX, e.offsetY];
             } else if (drawingMode === 'erase') {
                 eraseAt(e.offsetX, e.offsetY);
+            } else if (drawingMode === 'shape') {
+                if (canvasBackup) {
+                    ctx.putImageData(canvasBackup, 0, 0);
+                }
+                drawShape(currentShape, shapeStartX, shapeStartY, e.offsetX, e.offsetY);
             }
         });
 
         canvas.addEventListener('mouseup', () => {
             isDrawing = false;
             drawingMode = null;
+            canvasBackup = null;
         });
 
         canvas.addEventListener('mouseleave', () => {
@@ -162,6 +219,144 @@
         clearBtn.addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             localStorage.removeItem('drawing');
+        });
+
+        // Функції для малювання фігур
+        function drawShape(shape, x1, y1, x2, y2) {
+            const width = x2 - x1;
+            const height = y2 - y1;
+
+            if (shape === 'triangle') {
+                drawTriangle(currentTriangleType, x1, y1, x2, y2);
+                return;
+            }
+
+            ctx.beginPath();
+            
+            switch(shape) {
+                case 'square':
+                    ctx.rect(x1, y1, width, height);
+                    ctx.stroke();
+                    break;
+                case 'circle':
+                    const radius = Math.sqrt(width * width + height * height) / 2;
+                    ctx.arc(x1, y1, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 'diamond':
+                    ctx.moveTo((x1 + x2) / 2, y1);
+                    ctx.lineTo(x2, (y1 + y2) / 2);
+                    ctx.lineTo((x1 + x2) / 2, y2);
+                    ctx.lineTo(x1, (y1 + y2) / 2);
+                    ctx.closePath();
+                    ctx.stroke();
+                    break;
+            }
+        }
+        
+        // Функція для малювання різних типів трикутників
+        function drawTriangle(type, x1, y1, x2, y2) {
+            const width = x2 - x1;
+            const height = y2 - y1;
+            const centerX = x1 + width / 2;
+            
+            ctx.beginPath();
+            
+            switch(type) {
+                case 'right-triangle':
+                    // Прямокутний трикутник
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.closePath();
+                    break;
+                case 'isosceles':
+                    // Рівнобедрений трикутник
+                    ctx.moveTo(centerX, y1);
+                    ctx.lineTo(x1, y2);
+                    ctx.lineTo(x2, y2);
+                    ctx.closePath();
+                    break;
+                case 'acute':
+                    // Гострокутний трикутник (дуже гострий)
+                    ctx.moveTo(centerX, y1);
+                    ctx.lineTo(centerX - Math.abs(width) * 0.1, y2);
+                    ctx.lineTo(centerX + Math.abs(width) * 0.3, y2);
+                    ctx.closePath();
+                    break;
+                case 'obtuse':
+                    // Тупокутний трикутник
+                    ctx.moveTo(x1 - Math.abs(width) * 0.3, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.lineTo(centerX, y2);
+                    ctx.closePath();
+                    break;
+                case 'equilateral':
+                    // Рівносторонній трикутник
+                    const size = Math.max(Math.abs(width), Math.abs(height));
+                    ctx.moveTo(centerX, y1);
+                    ctx.lineTo(x1, y1 + size);
+                    ctx.lineTo(x2, y1 + size);
+                    ctx.closePath();
+                    break;
+                default:
+                    // Рівнобедрений за замовчуванням
+                    ctx.moveTo(centerX, y1);
+                    ctx.lineTo(x1, y2);
+                    ctx.lineTo(x2, y2);
+                    ctx.closePath();
+            }
+            ctx.stroke();
+        }
+
+        // Обробка кнопок фігур
+        const shapeButtons = document.querySelectorAll('.shape-btn');
+        const triangleBtn = document.querySelector('[data-shape="triangle"]');
+        const triangleModal = document.getElementById('triangleModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const triangleOptions = document.querySelectorAll('.triangle-option');
+        
+        // Обробка клік на кнопку трикутника
+        if (triangleBtn) {
+            triangleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                triangleModal.style.display = 'flex';
+            });
+        }
+        
+        // Обробка клік на опції трикутника
+        triangleOptions.forEach((option) => {
+            option.addEventListener('click', () => {
+                currentTriangleType = option.dataset.triangle;
+                currentShape = 'triangle';
+                shapeButtons.forEach(btn => btn.classList.remove('active'));
+                triangleBtn.classList.add('active');
+                triangleModal.style.display = 'none';
+            });
+        });
+        
+        // Закриття модального вікна
+        closeModalBtn.addEventListener('click', () => {
+            triangleModal.style.display = 'none';
+        });
+        
+        triangleModal.addEventListener('click', (e) => {
+            if (e.target === triangleModal) {
+                triangleModal.style.display = 'none';
+            }
+        });
+        
+        // Обробка інших кнопок фігур
+        shapeButtons.forEach((button) => {
+            if (button.dataset.shape !== 'triangle') {
+                button.addEventListener('click', () => {
+                    shapeButtons.forEach(btn => btn.classList.remove('active'));
+                    currentShape = button.dataset.shape;
+                    if (currentShape !== 'none') {
+                        button.classList.add('active');
+                    }
+                });
+            }
         });
     </script>
 </body>

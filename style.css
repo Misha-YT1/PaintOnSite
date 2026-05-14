@@ -90,6 +90,44 @@ canvas {
     margin-top: 5px;
 }
 
+.shapes-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #ffffff;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.shapes-panel h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.shape-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 32px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.shape-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.shape-btn.active {
+    background-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+}
+
 #cursorCircle {
     position: absolute;
     pointer-events: none;
@@ -130,4 +168,119 @@ canvas {
 
 #clearBtn:hover {
     background-color: #92080e;
+}
+
+/* Модальне вікно */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 500px;
+}
+
+.modal-content h3 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+}
+
+.triangle-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.triangle-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.triangle-option:hover {
+    border-color: #4CAF50;
+    background-color: #e8f5e9;
+}
+
+.triangle-option span {
+    font-size: 12px;
+    text-align: center;
+    color: #333;
+}
+
+.triangle {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #333;
+}
+
+.triangle.right-triangle {
+    width: 0;
+    height: 0;
+    border-left: 30px solid transparent;
+    border-bottom: 30px solid #333;
+    border-top: 0;
+    border-right: 0;
+}
+
+.triangle.isosceles {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 35px solid #333;
+}
+
+.triangle.acute {
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 38px solid #333;
+}
+
+.triangle.obtuse {
+    width: 0;
+    height: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-bottom: 25px solid #333;
+}
+
+.triangle.equilateral {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 34px solid #333;
+}
+
+.close-btn {
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
 }
