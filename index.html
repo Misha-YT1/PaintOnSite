@@ -19,6 +19,10 @@
             <button class="color-btn" data-color="#800080" style="background: #800080;"></button>
             <button id="paletteBtn" class="palette-btn" type="button">Палітра</button>
             <input id="colorPicker" type="color" value="#000000" hidden>
+            <div class="brush-size-panel">
+                <label for="brushSizeSlider">Розмір пензля: <span id="brushSizeDisplay">3</span>px</label>
+                <input id="brushSizeSlider" type="range" min="3" max="50" value="3">
+            </div>
         </div>
         <div class="canvas-container">
             <canvas id="drawingCanvas" width="900" height="650"></canvas>
@@ -72,6 +76,8 @@
         const saveBtn = document.getElementById('saveBtn');
         const clearBtn = document.getElementById('clearBtn');
         const cursorCircle = document.getElementById('cursorCircle');
+        const brushSizeDisplay = document.getElementById('brushSizeDisplay');
+        const brushSizeSlider = document.getElementById('brushSizeSlider');
 
         let isDrawing = false;
         let lastX = 0;
@@ -82,10 +88,11 @@
         let shapeStartX = 0;
         let shapeStartY = 0;
         const eraserRadius = 15;
+        let brushSize = 3;
         let canvasBackup = null;
 
         ctx.strokeStyle = '#000';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = brushSize;
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
 
@@ -170,9 +177,17 @@
             const y = e.clientY - rect.top;
             cursorCircle.style.left = `${x}px`;
             cursorCircle.style.top = `${y}px`;
-            cursorCircle.style.width = `${eraserRadius * 2}px`;
-            cursorCircle.style.height = `${eraserRadius * 2}px`;
-            cursorCircle.textContent = drawingMode === 'erase' ? '' : '';
+            const radius = drawingMode === 'erase' ? eraserRadius : brushSize / 2;
+            cursorCircle.style.width = `${radius * 2}px`;
+            cursorCircle.style.height = `${radius * 2}px`;
+            cursorCircle.textContent = '';
+        }
+
+        function updateBrushSize(size) {
+            brushSize = Number(size);
+            ctx.lineWidth = brushSize;
+            brushSizeDisplay.textContent = brushSize;
+            brushSizeSlider.value = brushSize;
         }
 
         const colorButtons = document.querySelectorAll('.color-btn');
@@ -206,6 +221,19 @@
         colorPicker.addEventListener('input', (e) => {
             setColor(e.target.value);
             setActiveColorButton(null);
+        });
+
+        brushSizeSlider.addEventListener('input', (e) => {
+            updateBrushSize(e.target.value);
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                updateBrushSize(Math.min(50, brushSize + 1));
+            } else {
+                updateBrushSize(Math.max(3, brushSize - 1));
+            }
         });
 
         // Збереження
